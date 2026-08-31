@@ -1,0 +1,92 @@
+from fastapi import FastAPI, UploadFile, File, Form, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
+import os
+import logging
+import traceback
+
+from models import ParseResult, ExtractorStatus
+from pipeline.extractor import extract
+from pipeline.segmenter import segment  
+from pipeline.field_parser import parse_fields
+from pipeline.scorer import score
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+app = FastAPI(title="Resume Parser Agent")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+frontend_dir = os.path.join(os.path.dirname(__file__), "..", "frontend")
+os.makedirs(frontend_dir, exist_ok=True)
+index_path = os.path.join(frontend_dir, "index.html")
+if not os.path.exists(index_path):
+    with open(index_path, "w") as f:
+        f.write("<html><body><h1>Resume Parser Agent Frontend</h1></body></html>")
+
+app.mount("/static", StaticFiles(directory=frontend_dir), name="static")
+
+@app.get("/")
+def read_root():
+    return FileResponse(index_path)
+
+@app.post("/parse", response_model=ParseResult)
+async def parse_resume(file: UploadFile = File(...), job_description: str = Form(...)):
+    if not file.filename:
+        raise HTTPException(status_code=400, detail="Please choose a resume file.")
+    if not job_description or not job_description.strip():
+        raise HTTPException(status_code=400, detail="Please add a job description.")
+    if file.size and file.size > 10 * 1024 * 1024:
+        raise HTTPException(status_code=400, detail="File too large. Limit 10MB.")
+        
+    ext = file.filename.rsplit('.', 1)[-1].lower() if '.' in file.filename else ''
+    if ext not in ["pdf", "docx"]:
+        raise HTTPException(status_code=400, detail="Only .pdf and .docx files are accepted.")
+        
+    try:
+        content = await file.read()
+        if len(content) > 10 * 1024 * 1024:
+            raise HTTPException(status_code=400, detail="File too large. Limit 10MB.")
+        if not content:
+            raise HTTPException(status_code=400, detail="The uploaded file is empty.")
+        logger.info(f"Extracting file {file.filename}")
+        
+        extractor_res = extract(content, file.filename)
+        
+        if extractor_res.status == ExtractorStatus.UNKNOWN:
+            return ParseResult(
+                fields=[],
+                fit_report=[],
+                raw_text=extractor_res.raw_text,
+                sections={},
+                extractor_status=extractor_res.status,
+                extractor_message=extractor_res.message
+            )
+            
+        segmenter_res = segment(extractor_res.raw_text)
+        fields = parse_fields(segmenter_res)
+        fit_report = score(fields, job_description)
+        
+        return ParseResult(
+            fields=fields,
+            fit_report=fit_report,
+            raw_text=extractor_res.raw_text,
+            sections=segmenter_res.sections,
+            extractor_status=extractor_res.status,
+            extractor_message=extractor_res.message
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error during parse: {str(e)}")
+        logger.error(traceback.format_exc())
+        raise HTTPException(status_code=500, detail="Internal server error during parsing.")

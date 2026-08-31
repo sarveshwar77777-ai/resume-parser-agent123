@@ -1,0 +1,14 @@
+# Python environments and generated files
+backend/.venv/
+__pycache__/
+*.py[cod]
+
+# Local settings and secrets
+.env
+.env.*
+!.env.example
+
+# Editor and operating-system files
+.DS_Store
+.vscode/settings.json
+

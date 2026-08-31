@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Resume Parser Agent — AI-powered resume analysis and job fit scoring">
+  <title>Resume Parser Agent | Candidate fit, clarified</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/index.css">
+</head>
+<body>
+  <header class="app-header">
+    <div class="header-content">
+      <div class="logo">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+          <polyline points="14 2 14 8 20 8"></polyline>
+          <line x1="16" y1="13" x2="8" y2="13"></line>
+          <line x1="16" y1="17" x2="8" y2="17"></line>
+          <polyline points="10 9 9 9 8 9"></polyline>
+        </svg>
+        <h1>Resume Parser <span>Agent</span></h1>
+      </div>
+      <p class="tagline">AI-powered analysis &amp; job-fit scoring</p>
+      <div class="header-status"><span></span> Private analysis</div>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="hero" aria-labelledby="pageTitle">
+      <div>
+        <p class="eyebrow">Candidate intelligence</p>
+        <h2 id="pageTitle">See the signal behind every resume.</h2>
+        <p class="hero-copy">Upload a resume and add the role requirements to extract a clear candidate profile and an evidence-backed fit report.</p>
+      </div>
+      <div class="workflow" aria-label="How it works">
+        <span><b>01</b> Upload</span><i></i><span><b>02</b> Compare</span><i></i><span><b>03</b> Review</span>
+      </div>
+    </section>
+
+    <section class="input-section">
+      <div class="input-heading">
+        <div>
+          <p class="eyebrow">New analysis</p>
+          <h2>Candidate &amp; role details</h2>
+        </div>
+        <p>Both fields are required.</p>
+      </div>
+      <div class="input-grid">
+        <div class="upload-zone" id="uploadZone">
+          <input type="file" id="fileInput" accept=".pdf,.docx" hidden>
+          <div class="upload-content">
+            <svg class="upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="17 8 12 3 7 8"></polyline>
+              <line x1="12" y1="3" x2="12" y2="15"></line>
+            </svg>
+            <p class="upload-title">Drag & drop resume here</p>
+            <p class="upload-subtitle">PDF or DOCX · up to 10 MB</p>
+            <button class="btn-secondary" id="browseBtn" type="button">Browse Files</button>
+            <div class="file-name-display" id="fileNameDisplay" style="display: none;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path><polyline points="13 2 13 9 20 9"></polyline></svg>
+              <span id="fileName"></span>
+              <button class="btn-icon" id="removeFileBtn" type="button" aria-label="Remove selected file" title="Remove file">×</button>
+            </div>
+          </div>
+        </div>
+        
+        <div class="jd-zone">
+          <div class="label-row"><label for="jdInput">Job Description</label><span id="jdCount">0 characters</span></div>
+          <textarea id="jdInput" aria-describedby="jdHint" placeholder="Paste the responsibilities, must-have skills, and qualifications for the role..."></textarea>
+          <p class="input-hint" id="jdHint">Tip: add each requirement on its own line for the clearest fit report.</p>
+        </div>
+      </div>
+      
+      <button class="btn-primary analyze-btn" id="analyzeBtn" disabled>
+        <span>Analyze Resume</span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+      </button>
+      <p class="submit-note">Your files are analyzed for this report only.</p>
+      
+      <div class="error-banner" id="errorBanner" style="display: none;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+        <span id="errorMessage">Error parsing resume</span>
+      </div>
+    </section>
+
+    <div class="loading-state" id="loadingState" style="display: none;">
+      <div class="spinner"></div>
+      <p>Analyzing candidate profile and scoring job fit...</p>
+    </div>
+
+    <section class="results-section" id="resultsSection" style="display: none;">
+      <div class="results-grid">
+        <div class="results-col">
+          <h2 class="section-title">Candidate Profile</h2>
+          <div class="profile-cards" id="profileCards">
+            <!-- Profile cards injected here -->
+          </div>
+        </div>
+        
+        <div class="results-col">
+          <h2 class="section-title">Fit Report</h2>
+          <div class="fit-summary" id="fitSummary">
+            <h3 id="fitSummaryText">0/0 Requirements Matched</h3>
+            <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+          </div>
+          <div class="fit-cards" id="fitCards">
+            <!-- Fit cards injected here -->
+          </div>
+        </div>
+      </div>
+      
+      <div class="raw-json-section">
+          <button class="btn-secondary toggle-json-btn" id="toggleJsonBtn" type="button" aria-expanded="false" aria-controls="rawJsonContainer">
+          <span>View Raw JSON Response</span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+        </button>
+        <div class="raw-json-container" id="rawJsonContainer" style="display: none;">
+          <button class="btn-icon copy-btn" id="copyJsonBtn" type="button" aria-label="Copy JSON to clipboard" title="Copy to clipboard">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+          </button>
+          <pre><code id="rawJsonCode"></code></pre>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>
