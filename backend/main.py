@@ -31,11 +31,7 @@ app.add_middleware(
 )
 
 frontend_dir = os.path.join(os.path.dirname(__file__), "..", "frontend")
-os.makedirs(frontend_dir, exist_ok=True)
 index_path = os.path.join(frontend_dir, "index.html")
-if not os.path.exists(index_path):
-    with open(index_path, "w") as f:
-        f.write("<html><body><h1>Resume Parser Agent Frontend</h1></body></html>")
 
 # ---------------------------------------------------------------------------
 # Supabase client (lazy-initialised; None when env vars are absent)
