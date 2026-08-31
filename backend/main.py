@@ -3,8 +3,13 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 import os
+import sys
 import logging
 import traceback
+
+# Ensure backend/ is on sys.path so sibling imports work regardless of
+# where the process is started (Vercel runs from the repo root).
+sys.path.insert(0, os.path.dirname(__file__))
 
 from models import ParseResult, ExtractorStatus
 from pipeline.extractor import extract
